@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
+//#include <curses.h>
+
+
 #include "chip8.h"
 
 
@@ -16,45 +20,30 @@ struct Context* make_context() {
 	struct Context *ctx;
 	ctx = malloc(sizeof(*ctx));
 	ctx->sp = 4095;
+	ctx->tick = -1;
 	memcpy(ctx->memory + 0x200, fonts, sizeof(fonts)/sizeof(**fonts));
 	return ctx;
 }
 
 
-void ctx_redraw(struct Context *ctx) {
-	int i, bi, x;
-	for (i=0; i<32; ++i) {
-		x = ctx->display[i];
-		for (bi=63; bi > 0; --bi) {
-			if (x & (1 << bi)) {
-				putc('#', stdout);
-			} else {
-				putc(' ', stdout);
-			}
-		}
-		while (0 && x > 0) {
-			if (x&1) {
-				putc('#', stdout);
-			} else {
-				putc(' ', stdout);
-			}
-			x >>= 1;
-		}
-		printf("\n");
-	}
-}
-
 int ctx_next(struct Context *ctx) {
 	uint16_t opcode = (ctx->memory[ctx->pc] << 8) + ctx->memory[ctx->pc+1];
 	int x,y;
-
-	printf("%x\n",opcode);
+	if (ctx->tick == -1)
+		ctx->tick = time(0);
+	if (time(0) - ctx->tick > 1) {
+		if (ctx->delay > 0)
+			--ctx->delay;
+		if (ctx->sound > 0)
+			--ctx->sound;
+		ctx->tick = time(0);
+	}
+	//printf("%x\n",opcode);
 	if (opcode == 0xffff) return 0;
 	switch (opcode>>12) {
 	case 0x0:
 		if (opcode == 0x00E0) {
 			memset(ctx->display, 0, sizeof(ctx->display));
-			ctx_redraw(ctx);
 		} else if (opcode == 0x00EE) {
 			ctx->pc = ctx->sp;
 			ctx->sp += 2;
@@ -149,15 +138,15 @@ int ctx_next(struct Context *ctx) {
 		break;
 
 	case 0xD:
-		x = ctx->registers[(opcode >> 8) & 0xF];
-		y = ctx->registers[(opcode >> 4) & 0xF];
-		printf("--- %d %d %d\n",ctx->I,ctx->memory[ctx->I],opcode & 0xF);
+		x = ctx->registers[(opcode >> 8) & 0xF] % SCREEN_WIDTH;
+		y = ctx->registers[(opcode >> 4) & 0xF] % SCREEN_HEIGHT;
+		//printf("--- %d %d %d\n",ctx->I,ctx->memory[ctx->I],opcode & 0xF);
 		for (int i=0; i < (opcode & 0xF); ++i) {
-			printf("[%x]",ctx->memory[ctx->I + i]);
+			//printf("[%x]",ctx->memory[ctx->I + i]);
 			ctx->display[y+i] ^= ctx->memory[ctx->I + i] << (x);
 		}
-		printf("\n");
-		ctx_redraw(ctx);
+		//printf("\n");
+		
 		break;
 	}
 	return 1;
