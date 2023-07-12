@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
-#include <curses.h>
+#ifndef NO_CURS
+ #include <curses.h>
+ #include "render.h"
+#endif
 
 #include "chip8.h"
-#include "render.h"
 
 void itoa(uint64_t val, char* buf, int base){
     int i;
@@ -53,16 +56,22 @@ int main(int argc, char **argv) {
 	
 	//ctx_disp_regs(ctx);
 	memcpy(ctx->memory, rom, filelen);
-	ctx_init_screen();
+#ifndef NO_CURS
+	render_init_screen();
+#endif
 	iters = 0;
 	while (ctx_next(ctx) && iters < 40 ){
 		ctx->pc += 2;
 		++iters;
-		ctx_redraw(ctx);
+#ifndef NO_CURS
+		render_redraw(ctx);
+#endif
 	}
 	
+#ifndef NO_CURS
 	getch();
-	ctx_end_screen();
+	render_end_screen();
+#endif
 
 	ctx_disp_regs(ctx);
 

@@ -1,5 +1,5 @@
 #include "chip8.h"
 
-void ctx_init_screen();
-void ctx_end_screen();
-void ctx_redraw(struct Context *ctx);
+void render_init_screen();
+void render_end_screen();
+void render_redraw(struct Context *ctx);

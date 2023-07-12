@@ -5,9 +5,7 @@
 
 
 
-
-
-void ctx_init_screen() {
+void render_init_screen() {
 	initscr();
 	cbreak();
 	noecho();
@@ -17,11 +15,11 @@ void ctx_init_screen() {
 	box(stdscr, 0,0);
 	curs_set(0);
 }
-void ctx_end_screen() {
+void render_end_screen() {
 	endwin();
 }
 
-void ctx_redraw(struct Context *ctx) {
+void render_redraw(struct Context *ctx) {
 #ifndef DBG_DISABLE_DRAW
 	int i;
 	uint64_t x,bi;
